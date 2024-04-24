@@ -1,7 +1,8 @@
 from sqlalchemy import or_, not_, func
 from sqlalchemy.orm import sessionmaker
 from models import User, engine
-from relationships import Address, session, Member
+# from relationships import Address, session, Member 
+from relationships import Merchant
 
 Session = sessionmaker(bind = engine)
 
@@ -87,18 +88,33 @@ session = Session()
 # for sex, count in users_tuple:
 #     print(f"Sex: {sex} - {count} users")
 
-member_1 = Member(name = "John Doe", age = 52)
-member_2 = Member(name = "Eunice Zhou", age = 27)
-member_3 = Member(name = "Joyce Liao", age = 26)
+# member_1 = Member(name = "John Doe", age = 52)
+# member_2 = Member(name = "Eunice Zhou", age = 27)
+# member_3 = Member(name = "Joyce Liao", age = 26)
 
-address_1 = Address(city = "New York", state = "NY", zip_code = "10001")
-address_2 = Address(city = "Los Angeles", state = "CA", zip_code = "90001")
-address_3 = Address(city = "Chicago", state = "Il", zip_code = "60601")
-address_4 = Address(city = "Taipei", state = "TP", zip_code = "23061")
+# address_1 = Address(city = "New York", state = "NY", zip_code = "10001")
+# address_2 = Address(city = "Los Angeles", state = "CA", zip_code = "90001")
+# address_3 = Address(city = "Chicago", state = "Il", zip_code = "60601")
+# address_4 = Address(city = "Taipei", state = "TP", zip_code = "23061")
 
-member_2.addresses.extend([address_1, address_4])
-member_1.addresses.append(address_3)
-member_3.addresses.append(address_2)
+# member_2.addresses.extend([address_1, address_4])
+# member_1.addresses.append(address_3)
+# member_3.addresses.append(address_2)
 
-session.add_all([member_3, member_1, member_2])
+# session.add_all([member_3, member_1, member_2])
+# session.commit()
+
+merchant1 = Merchant(merchantname = "Zeq Tech 1")
+merchant2 = Merchant(merchantname = "Zeq Tech 2")
+merchant3 = Merchant(merchantname = "Zeq Tech 3")
+
+merchant1.following.append(merchant2)
+merchant2.following.append(merchant3)
+merchant3.following.append(merchant1)
+
+session.add_all([merchant1, merchant2, merchant3])
 session.commit()
+
+print(f"{merchant1.following = }")
+print(f"{merchant2.following = }")
+print(f"{merchant3.following = }")

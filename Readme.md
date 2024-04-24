@@ -240,5 +240,13 @@ __Merchant 類：__
 `following = relationship('Merchant', secondary="following_association", primaryjoin=("FollowingAssociation.merchant_id == Merchant.id"), secondaryjoin=("FollowingAssociation.following_id == Merchant.id"))`：定義了與其他商戶的關注關係。透過 `relationship` 函數來建立對 Merchant 類的關聯。`secondary` 參數指定了用於建立多對多關係的關聯表，`primaryjoin` 參數指定了關聯表中商戶ID與商戶表中ID之間的關聯條件，`secondaryjoin` 參數指定了關聯表中商戶關注ID與商戶表中ID之間的關聯條件。
 
 ## 一對一的表格關係(One-on-One Relationship)
-一對一的表格關係是指兩個表格之間每一筆紀錄的關聯是一個對應一個
+一對一的表格關係是指兩個表格之間每一筆紀錄的關聯是一個對應一個，其關係如下圖:
+
 ![alt text](./Readme_picture/image-1.png)
+
+範例程式碼請查看 one_on_one_relationship.py
+
+## Self Relationship
+自我關係（self relationship）是指在資料庫中的表格中，同一表格中的一行數據與該表格中的其他行數據之間建立關聯的概念。這邊每個紀錄之間的關聯就像是 Linked-List 這種資料型態一樣，會有一個指針指向下一個與當前紀錄有關聯的紀錄位置
+
+範例程式碼請看 self_relationship.py

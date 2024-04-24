@@ -124,7 +124,9 @@ Base.metadata.create_all(engine)
 ```
 ### 類的屬性
 `__tablename__`: 指定資料庫表格的名稱
+
 `__allow_unmapped__`: 表示 SQLAlchemy 會將這個類視為可映射到資料庫的類，即使其中可能包含沒有足夠映射的資訊
+
 :sunny: 正常情況下，如果一個類沒有足夠的映射信息，SQLAlchemy 就會拋出異常，但設置` __allow_unmapped__ = True` 就可以阻止這種異常發生
 
 # 表格之間的關聯關係

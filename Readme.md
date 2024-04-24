@@ -250,3 +250,10 @@ __Merchant 類：__
 自我關係（self relationship）是指在資料庫中的表格中，同一表格中的一行數據與該表格中的其他行數據之間建立關聯的概念。這邊每個紀錄之間的關聯就像是 Linked-List 這種資料型態一樣，會有一個指針指向下一個與當前紀錄有關聯的紀錄位置
 
 範例程式碼請看 self_relationship.py
+
+## 多對多表格關係(Many-to-Many Relationship)
+多對多表格關係是指兩個表格之間的每一筆紀錄都對應上多筆紀錄，其關係如下圖:
+
+![alt text](./Readme_picture/image-2.png)
+
+範例程式碼請看 many_to_many_relationship.py

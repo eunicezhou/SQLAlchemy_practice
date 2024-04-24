@@ -229,12 +229,10 @@ class Merchant(BaseModel):
 
 Base.metadata.create_all(engine)
 ```
-FollowingAssociation 類：
-
+__FollowingAssociation 類：__
 `merchant_id = Column(Integer, ForeignKey('merchant.id'))`：定義一個用於存儲商家 id 的列，並將其設置為外鍵關聯到 merchant 表的 id 列
 
 `following_id = Column(Integer, ForeignKey('merchants.id'))`：定義一個用於存儲商家所關注的商家 id 的列，並將其設置為外鍵關聯到 merchants 表的 id 列
 
-Merchant 類：
-
+__Merchant 類：__
 `following = relationship('Merchant', secondary="following_association", primaryjoin=("FollowingAssociation.merchant_id == Merchant.id"), secondaryjoin=("FollowingAssociation.following_id == Merchant.id"))`：定義了與其他商戶的關注關係。透過 `relationship` 函數來建立對 Merchant 類的關聯。`secondary` 參數指定了用於建立多對多關係的關聯表，`primaryjoin` 參數指定了關聯表中商戶ID與商戶表中ID之間的關聯條件，`secondaryjoin` 參數指定了關聯表中商戶關注ID與商戶表中ID之間的關聯條件。

@@ -130,11 +130,11 @@ Base.metadata.create_all(engine)
 :sunny: 正常情況下，如果一個類沒有足夠的映射信息，SQLAlchemy 就會拋出異常，但設置` __allow_unmapped__ = True` 就可以阻止這種異常發生
 
 # 表格之間的關聯關係
-### 表示兩個實體之間的關聯關係
-__什麼是實體 ?__
+## 表示兩個實體之間的關聯關係
+### 什麼是實體 ?
 實體是指在同一個表格（或實體集合）中的不同紀錄。在資料庫中，表格中的每一行都表示一個實體，表個中的每個實體可能都具有相同的結構，但具有不同的屬性值。在 ORM 中，會將表格映射為類，而每個類的實例則表示為一個實體
 
-__在實體中用於表示兩個實體之間的關聯關係__
+### 在實體中用於表示兩個實體之間的關聯關係
 使用 follow 來表示實體之間的關聯關係，實際使用範例如下:
 ```python
 # 創建基類
@@ -194,7 +194,7 @@ merchant3.following.append(merchant1)
 一個常見的解決辦法是建立一個 關聯表(Associate Table)
 
 關聯表有時也稱為連接表、中間表或交集表，是在資料庫設計中用於建立多對多關係的一種技術。當兩個實體之間存在多對多的關係時，通常需要使用關聯表來實現這種關係。其概念如下圖:
-![alt text](image.png)
+![alt text](./Readme_picture/image.png)
 
 關聯表通常具有以下特徵：
 - 包含兩個或更多的外鍵：關聯表中的每個外鍵都關聯到另一個表中的主鍵，從而建立了實體之間的關係。
@@ -230,9 +230,15 @@ class Merchant(BaseModel):
 Base.metadata.create_all(engine)
 ```
 __FollowingAssociation 類：__
+
 `merchant_id = Column(Integer, ForeignKey('merchant.id'))`：定義一個用於存儲商家 id 的列，並將其設置為外鍵關聯到 merchant 表的 id 列
 
 `following_id = Column(Integer, ForeignKey('merchants.id'))`：定義一個用於存儲商家所關注的商家 id 的列，並將其設置為外鍵關聯到 merchants 表的 id 列
 
 __Merchant 類：__
+
 `following = relationship('Merchant', secondary="following_association", primaryjoin=("FollowingAssociation.merchant_id == Merchant.id"), secondaryjoin=("FollowingAssociation.following_id == Merchant.id"))`：定義了與其他商戶的關注關係。透過 `relationship` 函數來建立對 Merchant 類的關聯。`secondary` 參數指定了用於建立多對多關係的關聯表，`primaryjoin` 參數指定了關聯表中商戶ID與商戶表中ID之間的關聯條件，`secondaryjoin` 參數指定了關聯表中商戶關注ID與商戶表中ID之間的關聯條件。
+
+## 一對一的表格關係(One-on-One Relationship)
+一對一的表格關係是指兩個表格之間每一筆紀錄的關聯是一個對應一個
+![alt text](./Readme_picture/image-1.png)

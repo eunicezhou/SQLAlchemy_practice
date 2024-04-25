@@ -239,7 +239,7 @@ class Member(Base):
 # 創建資料庫表格
 Base.metadata.create_all(engine)
 ```
-:sunny: __mapped_column() 所建立的表格和 Mapped[data_type] 所建立的表格有什麼差異 ?
+:sunny: __mapped_column() 所建立的表格和 Mapped[data_type] 所建立的表格有什麼差異 ?__
 >Mapped[data_type] 所建立的表格預設為 NOT NULL
 >而 mapped_column() 所建立的則不會有這樣的預設
 >如果 Mapped[data_type] 所建立的表格不希望預設為 NOT NULL，可以改寫為以下寫法:
@@ -498,7 +498,9 @@ lazy='dynamic' 可以改變關聯屬性的行為方式。當我們設置關聯�
 
 範例程式碼請看 deferred_loading.py
 
-另外，在建立表格時，也可以使用 `group` 這個參數來將具有相似加載需求的屬性分在同一組，以便在需要時一起加載。例如下面的範例程式碼:
+__`group` 參數__
+
+用來將具有相似加載需求的屬性分在同一組，以便在需要時一起加載。例如下面的範例程式碼:
 ```python
 class UserLegacy(Base):
     __tablename__ = 'userlegacies'
@@ -522,6 +524,32 @@ print(other_user.first_name)
 print(other_user.last_name)
 print(other_user.other_value)
 ```
+
+__`raiseload` 參數__
+
+如果 ORM 嘗試訪問相關對象，但這些對象尚未被加載時，就會引發異常，而不是自動執行額外的查詢來加載這些對象。這可以幫助開發人員及時發現可能存在的性能問題，並確保不會在不需要的時候加載大量數據。以下為範例程式碼:
+```python
+class UserLegacy(Base):
+    __tablename__ = 'userlegacies'
+
+    id: Mapped[int] = mapped_column(primary_key = True)
+    nickname: Mapped[str] = mapped_column(String)
+    first_name: Mapped[str] = deferred(mapped_column(String), raiseload = True)
+    last_name = deferred(Column(String), raiseload = True)
+    other_value: Mapped[str] = mapped_column(String, deferred = True, deferred_raiseload = True)
+
+    def __repr__(self) -> str:
+        return f"<UserLegacy: {self.id} - {self.nickname}>"
+
+Base.metadata.create_all(engine)
+
+user = session.query(UserLegacy).first()
+print(other_user)
+print(other_user.first_name)
+print(other_user.last_name)
+print(other_user.other_value)
+```
+
 # 查詢
 __`session.scalar()`__
 
@@ -550,3 +578,22 @@ print(f"\nUser {user.id}: {user.name} - {user.posts} \n")
 >`query()` 方法可以與各種過濾器、連接、排序和其他查詢操作一起使用，以建構複雜的查詢語句。其所返回的結果是一個查詢結果集，資料結構可以是列表、元組或其他資料結構
 >
 >`scalar()` 方法用於從查詢結果中提取出單個值，而不是整個結果集。其返回的資料結構類型可以是數字、字串或其他單個數據類型
+
+# 不同類型的 Join
+### Inner Join
+顯示的資料在指定的兩個表格中都存在
+
+### Anti Inner Join
+顯示的資料為指定的兩個表格中，除了交集的部分以外
+
+### Left Join
+只顯示左邊表格內的資料
+
+### Outer Join
+顯示指定的兩個資料表中的其中一個，但不包括兩者之間共同擁有的資料
+
+### Full Outer Join
+所指定的兩個表格內的資料都有被包含。SQLAlchemy 並沒有直接支援 Full Outer Join，而是採用 Union 的方式來設計
+
+# 參考資料
+[Python SQLAlchemy ORM](https://www.youtube.com/playlist?list=PLKm_OLZcymWhtiM-0oQE2ABrrbgsndsn0)

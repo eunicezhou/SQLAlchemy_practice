@@ -27,6 +27,7 @@ Session = sessionmaker(bind=engine)
 
 ## __Step 3 定義類(Model Class)__
 類是用來表示資料庫的表格結構。在類中，需要使用 Column 來定義列，並使用 relationship 來定義表格之間的關係
+
 ### 定義類的方式有幾種可以選擇:
 1. 使用 Column Class 和簡單的 relationship 方法
 ```python
@@ -122,12 +123,156 @@ class Member(Base):
 # 創建資料庫表格
 Base.metadata.create_all(engine)
 ```
+
+Mapped 方法可以定義的資料格式:
+- bool: 用於 Boolean 型態的資料
+- byte: 用於 LargeBinary 型態的資料
+- datetime.date: 用於 Date 型態的資料
+- datetime.datetime: 用於 DateTime 型態的資料
+- datetime.time: 用於 Time 型態的資料
+- datetime.timedelta: 用於 Interval 型態的資料
+- decimal.Decimal: 用於 Numeric 型態的資料
+- float:用於 Float 型態的資料
+- int: 用於 Integer 型態的資料
+- str: 用於 String 型態的資料
+- uuid: 用於 UUID 型態的資料
+  
+我們可以在 Base 類中定義資料型態縮寫所代表的資料型態，舉例來說，如果在 Base class 中寫入如下的程式碼:
+```python
+class Base(DeclarativeBase):
+    type_annotation_map = {
+        int: BIGINT,
+    }
+```
+之後如果在類中的屬性寫入 `Mapped[int]` 就會表示該欄位的資料型態為 BIGINT
+
+我們也可以自定義資料格式，寫法如下:
+```python
+from sqlalchemy import String, create_engine
+from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, registry
+from typing import Optional
+from typing_extensions import Annotated
+
+engine = create_engine("sqlite:///database.db", echo = True)
+
+# Annotated 是用於創建帶有元數據註釋的數據類型輔助工具，其作用是將類型標註與其他元數據信息與數據類型相關聯
+str_20 = Annotated[str, 20]
+str_100 = Annotated[str, 100]
+
+class Base[DeclarativeBase]:
+    # 註冊類型註解和相應的數據庫資料型態的映射關係
+    registry = registry(
+        type_annotation_map = {
+            str_20: String(20),
+            str_100: String(100),
+        }
+    )
+
+class UserLegacy(Base):
+    __tablename__ = 'users'
+
+    id: Mapped[int] = mapped_column(primary_key = True)
+    first_name: Mapped[Optional[str_20]]
+    last_name: Mapped[Optional[str_100]]
+```
+上面建立基類和 Annotated 的部分可以改寫成下面的方式，結果會是一樣的:
+```python
+str_20 = Annotated[str, mapped_column(String(20))]
+str_100 = Annotated[str, mapped_column(String(100))]
+
+class Base(DeclarativeBase):
+    pass
+```
+之後的使用方式與上面的方式相同，會得到相同結果
+
+我們也可在 Annotated 中定義 Optional，如下程式碼:
+```python
+str_20 = Annotated[Optional[str], mapped_column(String(20))]
+str_100 = Annotated[str, mapped_column(String(100))]
+
+class Base(DeclarativeBase):
+    pass
+
+class UserLegacy(Base):
+    __tablename__ = 'users'
+
+    id: Mapped[int] = mapped_column(primary_key = True)
+    first_name: Mapped[str_20]
+    last_name: Mapped[Optional[str_100]]
+```
+
+4. 使用 `mapped_column` 方法
+
+```python
+from sqlalchemy import Column, Integer, String, create_engine
+from sqlalchemy.orm import declarative_base, mapped_column
+
+# 設置 echo=True 將啟用引擎的日誌功能，這將會標準化顯示引擎所執行的所有 SQL 語句
+engine = create_engine("sqlite:///database.db", echo = True)
+
+# 創建基類
+Base = declarative_base()
+
+# 定義類
+class Address(Base):
+    __tablename__ = "addresses"
+
+    city = mapped_column(String)
+    state = mapped_column(String)
+    zip_code = mapped_column(Integer)
+    member_id = mapped_column(Integer, ForeignKey("members.id"))
+    member = relationship('Meber', back_populates = "addresses")
+
+    def __repr__(self):
+        return f"<Address(id = {self.id}, city = {self.city})>"
+
+class Member(Base):
+    __tablename__ = "members"
+
+    name = mapped_column(String)
+    age = mapped_column(Integer)
+    addresses = relationship(Address)
+
+    def __repr__(self):
+        return f"<Member(id = {self.id}, username = {self.name})>"
+
+# 創建資料庫表格
+Base.metadata.create_all(engine)
+```
+:sunny: __mapped_column() 所建立的表格和 Mapped[data_type] 所建立的表格有什麼差異 ?
+>Mapped[data_type] 所建立的表格預設為 NOT NULL
+>而 mapped_column() 所建立的則不會有這樣的預設
+>如果 Mapped[data_type] 所建立的表格不希望預設為 NOT NULL，可以改寫為以下寫法:
+```python
+class Address(Base):
+    __tablename__ = "addresses"
+
+    state: Mapped[str] = mapped_column(nullable = True) # 這個也不會預設為NOT NULL
+    zip_code: Mapped[Optional[int]] = mapped_column() # 這個就不會預設為 NOT NULL
+    member_id: Mapped[int] = mapped_column(ForeignKey("members.id"))
+```
+
+### 創建基類的方法:
+
+1. 使用 declarative_base 建立
+
+```python
+Base = declarative_base()
+```
+
+2. 使用 DeclarativeBase 建立
+
+```python
+class Base(DeclarativeBase):
+    pass
+```
+
 ### 類的屬性
 `__tablename__`: 指定資料庫表格的名稱
 
 `__allow_unmapped__`: 表示 SQLAlchemy 會將這個類視為可映射到資料庫的類，即使其中可能包含沒有足夠映射的資訊
 
-:sunny: 正常情況下，如果一個類沒有足夠的映射信息，SQLAlchemy 就會拋出異常，但設置` __allow_unmapped__ = True` 就可以阻止這種異常發生
+:sunny: __正常情況下，如果一個類沒有足夠的映射信息，SQLAlchemy 就會拋出異常，但設置` __allow_unmapped__ = True` 就可以阻止這種異常發生__
 
 # 表格之間的關聯關係
 ## 表示兩個實體之間的關聯關係
@@ -340,3 +485,32 @@ lazy='dynamic' 可以改變關聯屬性的行為方式。當我們設置關聯�
 
 ### lazy loading（懶加載）
 當我們訪問對象的某個屬性時，ORM 不會立即從數據庫中加載相關的對象，而是等到需要時才加載。這樣可以節省內存和資源，在對象關係很多時特別有用。在 SQLAlchemy 中，懶加載是預設的行為，我們可以通過設置 lazy 參數為 True 或者 False 來控制是否懶加載。
+
+# 查詢
+__`session.scalar()`__
+
+用於執行查詢並返回單個標量值，通常用於執行聚合函數（如COUNT、SUM等）或返回單個值得查詢。下面為範例程式碼:
+```python
+user = User(name = 'Zeq Tech', posts = [Post(content = "This is some content")])
+session.add(user)
+session.commit()
+
+user = session.scalar(select(User))
+print(f"\nUser {user.id}: {user.name} - {user.posts} \n")
+```
+
+__`session.query()`__
+用於從資料庫中檢索數據。它返回一個 Query 對象，該對象包含了構建查詢的相關信息。下面是範例程式碼:
+```python
+user = User(name = 'Zeq Tech', posts = [Post(content = "This is some content")])
+session.add(user)
+session.commit()
+
+user = session.query(User).first()
+print(f"\nUser {user.id}: {user.name} - {user.posts} \n")
+```
+
+:sunny: __`.scalar()` 和 `.query()` 兩個方式的差異:__
+>`query()` 方法可以與各種過濾器、連接、排序和其他查詢操作一起使用，以建構複雜的查詢語句。其所返回的結果是一個查詢結果集，資料結構可以是列表、元組或其他資料結構
+>
+>`scalar()` 方法用於從查詢結果中提取出單個值，而不是整個結果集。其返回的資料結構類型可以是數字、字串或其他單個數據類型
